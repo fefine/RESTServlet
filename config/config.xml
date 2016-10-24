@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<main>
+	<packages>
+		<package>xyz.fefine.test</package>
+	</packages>
+	<interceptor class="xyz.fefine.servlet.SelfInterceptor" />
+
+</main>
