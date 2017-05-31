@@ -16,7 +16,7 @@ import java.io.IOException;
 public class A {
 
     @Path("/bb/{cc}")
-    public void a(HttpServletRequest request, HttpServletResponse response, @RequestParam("cc")String c) throws IOException {
+    public void a(HttpServletResponse response, @RequestParam("cc")String c) throws IOException {
 
         response.getWriter().write(c);
 

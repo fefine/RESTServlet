@@ -45,7 +45,7 @@ public class RequestHandler implements Comparable{
 	/**
 	 * 参数信息
 	 */
-	private String paramsInfo[];
+	private String paramsInfo[][];
 	
 	/**
 	 * 传递的参数
@@ -132,14 +132,14 @@ public class RequestHandler implements Comparable{
 
 
 
-	public String[] getParamsInfo() {
+	public String[][] getParamsInfo() {
 		return paramsInfo;
 	}
 
 
 
 
-	public void setParamsInfo(String[] paramsInfo) {
+	public void setParamsInfo(String[][] paramsInfo) {
 		this.paramsInfo = paramsInfo;
 	}
 
@@ -256,32 +256,39 @@ public class RequestHandler implements Comparable{
      */
 	private Object[] createObjs(HttpServletRequest req,HttpServletResponse resp){
 		
-		String[] infos = this.getParamsInfo();
+		String[][] infos = this.getParamsInfo();
 		
 		Object[] objs = new Object[this.method.getParameterCount()];
 		
 		//参数前两个必须为request,response
 		//这里需要修改
+
+		// request
+		if (infos[infos.length-2][2] != null) {
+			objs[Integer.parseInt(infos[infos.length-2][2])] = req;
+		}
+		// response
+		if (infos[infos.length-1][2] != null) {
+			objs[Integer.parseInt(infos[infos.length-1][2])] = resp;
+		}
+/*
 		if(!infos[infos.length-2] .equals("-1"))
 			objs[Integer.parseInt(infos[infos.length-2])] = req;
 		if(!infos[infos.length-1] .equals("-1"))
 			objs[Integer.parseInt(infos[infos.length-1])] = resp;
-//		objs[1] = resp;
-		
+*/
+
 		//进行变量注入
 		String reqPath = req.getServletPath();
 		reqPath = reqPath.substring(0, reqPath.lastIndexOf("."));
-//		method.getParameters();
-//		proxy.
-//		Parameter[] ps = method.getParameters();
+
 		String[] path = reqPath.split("/");
 		//减去包含req，reesp的
-		for (int i=0;i< infos.length-2;i++) {
+		for (int i = 0; i < infos.length - 2; i++) {
 
-			String info = infos[i];
+//			String info = infos[i];
 			//获取不同的参数
-			String[] t = info.split("}");
-
+			String[] t = infos[i];
 
 			//获取url中的值,t[1] 为在path中的位置
 			String value = path[Integer.parseInt(t[1])];
@@ -298,8 +305,6 @@ public class RequestHandler implements Comparable{
 	/**
 	 * 重写比较方法，便于二叉搜索树进行比较
 	 * 这里只比较urlpattern
-	 * @param o
-	 * @return
      */
 	@Override
 	public int compareTo(Object o) {

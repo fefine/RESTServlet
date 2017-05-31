@@ -4,5 +4,4 @@
 		<package>xyz.fefine.test</package>
 	</packages>
 	<interceptor class="xyz.fefine.servlet.SelfInterceptor" />
-
 </main>

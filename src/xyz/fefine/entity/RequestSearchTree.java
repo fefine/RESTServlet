@@ -10,15 +10,11 @@ import java.util.regex.Pattern;
  */
 public class RequestSearchTree<T extends RequestHandler> implements Comparator<T>{
 
-
-
     private Node<T> root;
     private int size;
 
     public RequestSearchTree(){
-
         size = 0;
-
     }
 
     public void insert(T t) {
@@ -34,8 +30,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
      * @return
      */
     private Node<T> insertNode(Node<T> N,T t){
-
-
 
         if(N == null)
             N = new Node<>(t);
@@ -54,7 +48,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
                 }
             }else {
                 N.right = insertNode(N.right,t);
-
                 // n - n->right = 2
                 if (height(N) - height(N.left) == 2) {
                     // this is <
@@ -72,7 +65,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
 
     //传进来一个url
     public T find(String url){
-
         //感觉这里很不合理
         RequestHandler t = new RequestHandler();
         t.setUrl(url);
@@ -80,7 +72,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
     }
 
     private Node<T> findNode(Node<T> node,T t){
-
         if(node == null)
             return node;
         int r = compare(node.data,t);
@@ -90,8 +81,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
             return findNode(node.left,t);
         else
             return findNode(node.right,t);
-
-
     }
 
 
@@ -109,9 +98,7 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
     }
 
     private Node maxHeight(Node a,Node b){
-
         return height(a) > height(b) ? a:b;
-
     }
 
 
@@ -121,7 +108,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
      * @return
      */
     private Node<T> lLRotation(Node<T> node){
-
         Node a = node.left;
         Node temp = a.right;
         node.left = temp;
@@ -137,14 +123,12 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
      * @return
      */
     private Node<T> rRRotation(Node<T> node){
-
         Node a = node.right;
         Node temp = a.left;
         node.right = temp;
         node.height = height(maxHeight(node.left,node.right))+1;
         a.left = node;
         a.height = height(maxHeight(a.left,a.right))+1;
-
         return a;
     }
 
@@ -156,7 +140,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
     private Node<T> lRRotation(Node<T> node){
         node.left = rRRotation(node.left);
         return lLRotation(node);
-
     }
 
     /**
@@ -165,10 +148,8 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
      * @return
      */
     private Node<T> rLRotation(Node<T> node){
-
         node.right = lLRotation(node.right);
         return rRRotation(node);
-
     }
 
     /**
@@ -187,7 +168,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
      * @return
      */
     public Node<T> remove(T t){
-
         if(findNode(root,t) != null)
             return root = deleteNode(root,t);
         else
@@ -196,12 +176,9 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
 
 
     private Node<T> deleteNode(Node<T> node,T t){
-
         if(node == null)
             return null;
-
         if(compare(node.data,t) > 0){
-
             node.left = deleteNode(node.left,t);
             if (height(node.right) - height(node.left) == 2) {
                 // this is <
@@ -213,11 +190,9 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
                     //RL
                     node = rLRotation(node);
             }
-
         }else if(compare(node.data,t) < 0){
             node.right = deleteNode(node.right,t);
             if(height(node.left) - height(node.right) == 2){
-
                 Node<T> N = node.left;
                 if(height(N.left) > height(N.right))
                     // LL
@@ -229,7 +204,6 @@ public class RequestSearchTree<T extends RequestHandler> implements Comparator<T
         }else{
             //  equal
             if(height(node.left) > height(node.right)){
-
                 //当左树>又树,取出左树最大的,放到node中,然后删除那个最大的
                 Node<T> tNode = maxNode(node.left);
                 node.data = tNode.data;

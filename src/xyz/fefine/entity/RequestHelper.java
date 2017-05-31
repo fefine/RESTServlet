@@ -7,10 +7,7 @@ import java.lang.reflect.Parameter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -38,14 +35,9 @@ import xyz.fefine.util.Interceptor;
 public class RequestHelper {
 
 	private Logger LOG = Logger.getLogger(this.getClass().getName(), null);
-
 	private RequestSearchTree<RequestHandler> handlers;
 	//拦截器
 	private Interceptor interceptor;
-
-
-//	private RequestHandler handler;
-
 
 	public Interceptor getInterceptor() {
 		return interceptor;
@@ -58,20 +50,16 @@ public class RequestHelper {
 		handlers = new RequestSearchTree<>();
 	}
 
-
 	/**
 	 * 获取真实的请求方式get,post,put,delete,返回的均为小写
-	 *
 	 * @param req 请求
 	 * @return 请求方式
 	 */
 	public String getRealRequestMathod(HttpServletRequest req) {
-
 		if (req.getMethod().toLowerCase().equals("get")) {
 			LOG.log(Level.INFO, "request method is GET");
 			return "get";
 		}
-
 		String method = req.getParameter("_method");
 
 		if (method == null) {
@@ -90,13 +78,9 @@ public class RequestHelper {
 	 * @return handler
 	 */
 	public RequestHandler findRequestHandler(String url) throws NoHandlerFoundException {
-
 		LOG.log(Level.INFO, "request url is " + url.substring(0, url.lastIndexOf(".")));
-
 		//去除请求的后缀，要不然带后缀的请求找不到合适的handler
-		//这里查找比较浪费时间
 		url = url.substring(0, url.lastIndexOf("."));
-
 		RequestHandler rh = handlers.find(url);
 		if (rh == null)
 			throw new NoHandlerFoundException();
@@ -105,50 +89,35 @@ public class RequestHelper {
 
 	/**
 	 * 初始化requestHandler
-	 *
 	 * @param packagePath 包路径
-	 * @return requestHandler
 	 */
 	public void initRequestHandler(String packagePath) {
 		Document doc = getDoc(packagePath);
 		//contentConfigLocation
 		String[] packages = getPackageName(doc);
 		this.interceptor = initInterceptor(doc);
-
 		if (packages == null) {
 			LOG.log(Level.WARNING, "package is null");
-//			return null;
 		}
-
 		for (String pkName : packages) {
-
 			scanPackage(pkName);
 		}
-
 	}
 
 	/**
 	 * 生成Interceptor，当没有自定义时使用默认
-	 *
-	 * @param doc
-	 * @return
 	 */
 	private Interceptor initInterceptor(Document doc) {
-
 		//获取根
 		Element ele = doc.getDocumentElement();
-
 		//要扫描的包名 packages/package
 		NodeList nls = ele.getElementsByTagName("interceptor");
 		if (nls.getLength() < 1) {
 			return new DefaultInterceptor();
 		} else {
-
 			Node node = nls.item(0);
 			NamedNodeMap nnm = node.getAttributes();
-
 			String claName = nnm.getNamedItem("class").getNodeValue();
-
 			try {
 				LOG.log(Level.INFO,"Scan Inteceptor class is "+claName);
 				return (Interceptor) Class.forName(claName).newInstance();
@@ -168,14 +137,11 @@ public class RequestHelper {
 
 	/**
 	 * 获取扫描包的路径
-	 * @param doc
-	 * @return
+	 * @return  包名
      */
 	private String[] getPackageName(Document doc){
-
 			//获取根
 			Element ele = doc.getDocumentElement();
-			
 			//要扫描的包名 packages/package
 			NodeList nls = ele.getElementsByTagName("packages");
 			Node pks = null;
@@ -185,26 +151,17 @@ public class RequestHelper {
 			}else{
 				pks = nls.item(0);
 			}
-
 			NodeList nl = pks.getChildNodes();
-			
 			String[] scPkName = new String[nl.getLength()];
-			
 			for (int i = 0; i < nl.getLength(); i++) {
-				
 				Node no = nl.item(i);
-				
 				scPkName[i] = no.getTextContent();
-				
 				//scanPackage(sacnPkName);
 				LOG.log(Level.INFO,"scanPackageName:"+no.getTextContent());
-				
 			}
-			
-			
 			return scPkName;
-
 	}
+
 	//获取解析好的doc
 	private Document getDoc(String packagePath){
 		// getpath
@@ -377,11 +334,13 @@ public class RequestHelper {
 
                     }
 				}
-                //判断map中是否含有req,resp
+/*
+                // 如果其中不含有req或者resp
                 if(!map.containsKey("_request"))
                     map.put("_request",-1);
                 if(!map.containsKey("_response"))
                     map.put("_response",-1);
+*/
 				//保存到list中
 				save(className, methodName, classAnnoName, methodAnnoName,map,handler);
 				
@@ -406,18 +365,13 @@ public class RequestHelper {
         //将url改造成正则的形式
         //main/{a}/{b} -> main/[^/]+/[^/]+$
 		String urlPattern = url.replaceAll("\\{[a-z0-9]+\\}", "[^/]+")+"$";
-		
 		LOG.log(Level.INFO, "scanUrl:"+url+"   scanUrlPattern:"+urlPattern);
-		
 		handler.setUrl(url);
 		handler.setUrlPattern(Pattern.compile(urlPattern));
-		
 		//将map放入字符串中
-		String[] params = paramsLocation(url,map);
-		
+		String[][] params = paramsLocation(url,map);
 		//参数的部分信息
 		handler.setParamsInfo(params);
-
 		handlers.insert(handler);
 	}
 
@@ -427,37 +381,35 @@ public class RequestHelper {
 	 * @param map 参数及其位置
      * @return
      */
-	private String[] paramsLocation(String url ,Map<String,Integer> map){
+	private String[][] paramsLocation(String url ,Map<String,Integer> map){
 		
 		String[] sta = url.split("/");
 	
 		//存放参数,为了防止添加req和resp后溢出，因此+2
-		String[] res = new String[sta.length+2];
+		String[][] res = new String[sta.length+2][3];
 		int j = 0;
 		for (int i = 0; i < sta.length; i++) {
 			if(sta[i].matches("\\{.+\\}")){
-				String t = "";
 				String k = sta[i].substring(1,sta[i].length()-1);
 				//第一个为参数名称，参数在源字符串中的位置，参数在方法的的参数中的位置
-				t += k + "}"+i + "}" + map.get(k);
-				res[j++] = t;
+//				t += k + "}"+i + "}" + map.get(k);
+				res[j++] = new String[]{k, String.valueOf(i), String.valueOf(map.get(k))};
 //				System.out.println("t is "+t);
-				LOG.log(Level.INFO, "params:"+t);
+				LOG.log(Level.INFO, "params:" + Arrays.toString(res[j - 1]));
 			}
 		}
         //放入req，resp
+/*
         res[j++] = map.get("_request").toString();
         res[j++] = map.get("_response").toString();
+*/
+		res[j++] = new String[]{"_request", null, map.get("_request") == null ? null : String.valueOf(map.get("_request"))};
+		res[j++] = new String[]{"_response", null, map.get("_response") == null ? null : String.valueOf(map.get("_response"))};
 
 		//sta为新字符串
-		sta = new String[j];
-		for (int i = 0; i < j; i++) 
-			//将res中多余的去除
-			sta[i] = res[i];
-		
-		
-		return sta;
-		
+		String[][] ps = new String[j][2];
+		System.arraycopy(res, 0, ps, 0, j);
+		return ps;
 	}
 	
 	
